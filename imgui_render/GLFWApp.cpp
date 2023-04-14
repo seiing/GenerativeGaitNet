@@ -1169,38 +1169,38 @@ void GLFWApp::draw()
             DrawMuscles(mEnv->GetCharacter()->GetMuscles());
     }
 
-    DrawSkeleton(mEnv->GetBVHSkeleton());
+    // DrawSkeleton(mEnv->GetBVHSkeleton());
 
     if (mDrawReference)
     {
-        Eigen::VectorXd p = mEnv->GetTargetPositions();
-        if (mIncludeAction == 1)
-            p.tail(p.rows() - 6) += mDisplacement;
-        else if (mIncludeAction == 2)
-        {
-            if (mEnv->GetActionType() == 0)
-            {
-                p.head(6) = mEnv->GetCharacter()->GetSkeleton()->getPositions().head(6) + 1.0 / mEnv->GetSimulationHz() * mEnv->GetCharacter()->GetSkeleton()->getVelocities().head(6);
+        // Eigen::VectorXd p = mEnv->GetTargetPositions();
+        // if (mIncludeAction == 1)
+        //     p.tail(p.rows() - 6) += mDisplacement;
+        // else if (mIncludeAction == 2)
+        // {
+        //     if (mEnv->GetActionType() == 0)
+        //     {
+        //         p.head(6) = mEnv->GetCharacter()->GetSkeleton()->getPositions().head(6) + 1.0 / mEnv->GetSimulationHz() * mEnv->GetCharacter()->GetSkeleton()->getVelocities().head(6);
 
-                p.tail(p.rows() - 6) += mEnv->GetAction();
-            }
-            else if (mEnv->GetActionType() == 1)
-            {
-                p.tail(p.rows() - 6).setZero();
-                if (mEnv->IsArmExist())
-                {
-                    p[mEnv->GetCharacter()->GetSkeleton()->getJoint("ArmL")->getIndexInSkeleton(2)] = -M_PI / 2;
-                    p[mEnv->GetCharacter()->GetSkeleton()->getJoint("ArmR")->getIndexInSkeleton(2)] = M_PI / 2;
-                }
-                p.tail(p.rows() - 6) += mEnv->GetAction();
-            }
-            else if (mEnv->GetActionType() == 2)
-            {
-                p = mEnv->GetCharacter()->GetSkeleton()->getPositions();
-                p.tail(p.rows() - 6) += mEnv->GetAction();
-            }
-        }
-        mEnv->GetReferenceSkeleton()->setPositions(p);
+        //         p.tail(p.rows() - 6) += mEnv->GetAction();
+        //     }
+        //     else if (mEnv->GetActionType() == 1)
+        //     {
+        //         p.tail(p.rows() - 6).setZero();
+        //         if (mEnv->IsArmExist())
+        //         {
+        //             p[mEnv->GetCharacter()->GetSkeleton()->getJoint("ArmL")->getIndexInSkeleton(2)] = -M_PI / 2;
+        //             p[mEnv->GetCharacter()->GetSkeleton()->getJoint("ArmR")->getIndexInSkeleton(2)] = M_PI / 2;
+        //         }
+        //         p.tail(p.rows() - 6) += mEnv->GetAction();
+        //     }
+        //     else if (mEnv->GetActionType() == 2)
+        //     {
+        //         p = mEnv->GetCharacter()->GetSkeleton()->getPositions();
+        //         p.tail(p.rows() - 6) += mEnv->GetAction();
+        //     }
+        // }
+        // mEnv->GetReferenceSkeleton()->setPositions(p);
 
         DrawSkeleton(mEnv->GetReferenceSkeleton());
     }

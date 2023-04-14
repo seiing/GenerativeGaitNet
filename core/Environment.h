@@ -113,6 +113,7 @@ namespace MASS
 		void Initialize_from_text(const std::string &metadata, bool load_obj = true);
 
 		double GetReward();
+		double GetTPoseReward();
 		double GetAvgVelocityReward();
 		std::map<std::string, double> GetRewardMap();
 		double GetLocoPrinReward();
@@ -253,19 +254,20 @@ namespace MASS
 
 		double GetPhaseRatio() { return mPhaseRatio * sqrt(1 / mGlobalRatio); }
 		double GetTargetVelocity();
+		double GetAvgVelocity();
 
-		double GetAvgVelocity()
-		{
-			int horizon = mCharacter->GetBVH()->GetMaxTime() * mSimulationHz / (mPhaseRatio * sqrt(1 / mGlobalRatio));
-			Eigen::Vector3d avg_vel;
-			if (mComTrajectory.size() > horizon)
-				avg_vel = ((mComTrajectory.back() - mComTrajectory[mComTrajectory.size() - horizon]) / horizon) * mSimulationHz;
-			else if (mComTrajectory.size() <= 1)
-				avg_vel = mCharacter->GetSkeleton()->getCOMLinearVelocity();
-			else
-				avg_vel = ((mComTrajectory.back() - mComTrajectory.front()) / (mComTrajectory.size() - 1)) * mSimulationHz;
-			return avg_vel[2];
-		}
+		// double GetAvgVelocity()
+		// {
+		// 	int horizon = mCharacter->GetBVH()->GetMaxTime() * mSimulationHz / (mPhaseRatio * sqrt(1 / mGlobalRatio));
+		// 	Eigen::Vector3d avg_vel;
+		// 	if (mComTrajectory.size() > horizon)
+		// 		avg_vel = ((mComTrajectory.back() - mComTrajectory[mComTrajectory.size() - horizon]) / horizon) * mSimulationHz;
+		// 	else if (mComTrajectory.size() <= 1)
+		// 		avg_vel = mCharacter->GetSkeleton()->getCOMLinearVelocity();
+		// 	else
+		// 		avg_vel = ((mComTrajectory.back() - mComTrajectory.front()) / (mComTrajectory.size() - 1)) * mSimulationHz;
+		// 	return avg_vel[2];
+		// }
 		double GetInsVelocity() { return mCharacter->GetSkeleton()->getCOMLinearVelocity()[2]; }
 
 		Eigen::Vector3d GetNextTargetFoot() { return mNextTargetFoot; }
@@ -436,6 +438,7 @@ namespace MASS
 		double mMinCOMVelocity;
 		double mMaxCOMVelocity;
 		double mTargetCOMVelocity;
+		double mAvgCOMVelocity;
 
 		double mGlobalTime;
 

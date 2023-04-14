@@ -5,21 +5,21 @@ selfcollision false
 action_type 0
 use_abs_step false
 use_newspd false
-use_muscle true
+use_muscle false
 use_excitation false
 use_motionoptimization false
-use_contractilestate true
+use_contractilestate false
 use_adaptivesampling false
-use_timewarping true
+use_timewarping false
 use_stepwarping false
-use_sym true
+use_sym false
 use_displacement false
-use_stride 0.75 1.25
-use_phase 0.75 1.25
+# use_stride 0.75 1.25
+# use_phase 0.75 1.25
 use_imitation false
-use_locoprin true
+use_locoprin false
 use_init_negative false
-use_critical_damping true
+use_critical_damping false
 use_adaptivekp false
 use_passive_regul false
 cascading_type 0
@@ -46,12 +46,6 @@ muscle_end
 muscle_force_param
 muscle_force_end
 skel_length_param
-global 0.85 1.0
-Head 0.9 1.0
-FemurL 0.9 1.0
-FemurR 0.9 1.0
-TibiaL 0.9 1.0
-TibiaR 0.9 1.0
 skel_length_end
 # simple_motion_file /data/SimpleMotionSet.txt /data/JointMap.txt
 skeleton_parameter_file /data/SkeletonParameter.xml

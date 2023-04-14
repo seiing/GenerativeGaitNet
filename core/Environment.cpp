@@ -830,6 +830,11 @@ void Environment::
 	cur_pos[3] = 0.0;
 	cur_pos[4] = -1.0;
 
+	cur_pos.setZero();
+	cur_pos[mCharacter->GetSkeleton()->getJoint("ArmL")->getIndexInSkeleton(0)+2] = -1.309;
+	cur_pos[mCharacter->GetSkeleton()->getJoint("ArmR")->getIndexInSkeleton(0)+2] =  1.309;
+	cur_vel.setZero();
+
 	mCharacter->GetSkeleton()->setPositions(cur_pos);
 	mCharacter->GetSkeleton()->setVelocities(cur_vel);
 	mCharacter->GetSkeleton()->computeForwardKinematics(true, true, false);
@@ -850,8 +855,8 @@ void Environment::
 		mBVHPositions = bvh_pv.first;
 		mBVHVelocities = bvh_pv.second;
 
-		mReferenceSkeleton->setPositions(mTargetPositions);
-		mReferenceSkeleton->setVelocities(mTargetVelocities);
+		mReferenceSkeleton->setPositions(cur_pos);
+		mReferenceSkeleton->setVelocities(cur_vel);
 		mReferenceSkeleton->computeForwardKinematics(true, true, false);
 
 		mBVHSkeleton->setPositions(mBVHPositions);
@@ -1241,11 +1246,13 @@ Environment::
 {
 
 	Eigen::VectorXd p_des = mTargetPositions;
+	p_des.setZero();
 
 	if (mActionType == 0)
 	{
 		if (IsArmExist())
 		{
+
 		}
 	}
 	else if (mActionType == 1)
@@ -1349,7 +1356,7 @@ int Environment::
 		isTerminal = 1;
 	else if (dart::math::isNan(p) || dart::math::isNan(v))
 		isTerminal = 2;
-	else if (mWorld->getTime() > 10.0)
+	else if (mWorld->getTime() > 5.0)
 		isTerminal = 3;
 
 	return isTerminal;
@@ -1835,6 +1842,10 @@ void Environment::
 	std::pair<Eigen::VectorXd, Eigen::VectorXd> pv = mCharacter->GetTargetPosAndVel(mLocalTime, mPhaseRatio * sqrt(1 / mGlobalRatio) / mControlHz);
 	mTargetPositions = pv.first;
 	mTargetVelocities = pv.second;
+	mTargetPositions.setZero();
+	mTargetPositions[mCharacter->GetSkeleton()->getJoint("ArmL")->getIndexInSkeleton(0)+2] = -1.309;
+	mTargetPositions[mCharacter->GetSkeleton()->getJoint("ArmR")->getIndexInSkeleton(0)+2] =  1.309;
+	mTargetVelocities.setZero();
 
 	if (mIsRender)
 	{
@@ -2193,13 +2204,14 @@ Environment::
 double Environment::
 	GetAvgVelocityReward()
 {
-
-	int horizon = mCharacter->GetBVH()->GetMaxTime() * mSimulationHz / (mPhaseRatio * sqrt(1 / mGlobalRatio));
+	// int horizon = 1;
+	// int horizon = mCharacter->GetBVH()->GetMaxTime() * mSimulationHz / (mPhaseRatio * sqrt(1 / mGlobalRatio));
+	// std::cout << horizon << std::endl;
+	int horizon = 30;
 
 	double mRefVel = GetTargetVelocity();
-
 	Eigen::Vector3d avg_vel;
-	if (mComTrajectory.size() > 1.5 * horizon)
+	if (mComTrajectory.size() > horizon)
 		avg_vel = ((mComTrajectory.back() - mComTrajectory[mComTrajectory.size() - horizon]) / horizon) * mSimulationHz;
 
 	else
@@ -2447,6 +2459,45 @@ Environment::
 	return r;
 }
 
+double 
+Environment::
+	GetTPoseReward()
+{
+	auto skel = mCharacter->GetSkeleton();
+	auto q = skel->getPositions();
+
+	Eigen::VectorXd ref_q = Eigen::VectorXd::Zero(q.size());
+	ref_q[4] = mCharacter->yOffset;
+
+	int left_arm_idx = skel->getJoint("ArmL")->getIndexInSkeleton(2);
+	ref_q[left_arm_idx] = -1.309;
+	int right_arm_idx = skel->getJoint("ArmR")->getIndexInSkeleton(2);
+	ref_q[right_arm_idx] = 1.309;
+
+	skel->setPositions(ref_q);
+	mReferenceSkeleton->setPositions(ref_q);
+	skel->setPositions(q);
+
+	Eigen::VectorXd q_diff = skel->getPositionDifferences(q, ref_q);
+	q_diff.head(6).setZero();
+
+	if (skel->getJoint("Neck") != nullptr)
+		q_diff.segment(skel->getJoint("Neck")->getIndexInSkeleton(0), skel->getJoint("Neck")->getNumDofs()).setZero();
+	if (skel->getJoint("Head") != nullptr)
+		q_diff.segment(skel->getJoint("Head")->getIndexInSkeleton(0), skel->getJoint("Head")->getNumDofs()).setZero();
+
+	double r_q = exp(q_diff.squaredNorm() / q_diff.size() * -20.0);
+
+	double r_tpose = r_q;
+
+	if (mIsRender)
+	{
+		mValues.insert(std::make_pair("tpose", r_tpose));
+	}
+
+	return r_tpose; 
+}
+
 double
 Environment::
 	GetReward()
@@ -2457,9 +2508,7 @@ Environment::
 	max_r = 1.0;
 
 	double r_total =
-		0.0 + mMetabolicWeight * GetMetabolicReward() + (mUseImitation ? 0.2 * GetImitationReward() : 0) + 2.0 * (mUseLocoPrinReward ? GetLocoPrinReward() : 1) * GetAvgVelocityReward() * (mUseVelocity ? 1 : GetStepReward());
-
-	GetOverTorqueReward();
+		GetTPoseReward() * GetAvgVelocityReward();
 
 	if (dart::math::isNan(r_total))
 		return 0;
@@ -3042,7 +3091,8 @@ double
 Environment::
 	GetTargetVelocity()
 {
-	return (mUseVelocity ? mTargetCOMVelocity : mPhaseRatio * sqrt(1 / mGlobalRatio) * (mStrideRatio * mRefStride * mGlobalRatio / mCharacter->GetBVH()->GetMaxTime()));
+	return 0.0;
+	// return (mUseVelocity ? mTargetCOMVelocity : mPhaseRatio * sqrt(1 / mGlobalRatio) * (mStrideRatio * mRefStride * mGlobalRatio / mCharacter->GetBVH()->GetMaxTime()));
 }
 
 void Environment::

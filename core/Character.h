@@ -104,10 +104,11 @@ namespace MASS
 		void SetSimpleMotion(const std::string &simplemotion, const std::string &jointmap);
 
 		double mGlobalRatio;
+		double motionScale, yOffset, rootDefaultHeight, footDifference;
 
 	private:
 		bool mUseOBJ;
-		double motionScale, yOffset, rootDefaultHeight, footDifference;
+		
 		std::map<std::string, std::vector<SimpleMotion *>> muscleToSimpleMotions;
 		std::map<dart::dynamics::BodyNode *, ModifyInfo> modifyLog;
 
