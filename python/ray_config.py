@@ -85,7 +85,7 @@ CONFIG["ppo_medium"]["trainer_config"]["ref_sgd_minibatch_size"] = 1024
 #===============================Training Configuration For Various Devices=========================================
 
 CONFIG["ppo_medium_server"] = copy.deepcopy(CONFIG["ppo_medium"])
-CONFIG["ppo_medium_server"]["num_workers"] = 128 * 4
+CONFIG["ppo_medium_server"]["num_workers"] = 128 * 2
 
 CONFIG["ppo_medium_node"] = copy.deepcopy(CONFIG["ppo_medium"])
 CONFIG["ppo_medium_node"]["num_workers"] = 128

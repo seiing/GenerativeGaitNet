@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=test
 #SBATCH --cpus-per-task=128
-#SBATCH --nodes=4
+#SBATCH --nodes=2
 #SBATCH --tasks-per-node=1
 #SBATCH --partition=all
 
